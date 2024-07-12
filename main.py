@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
-from vLLM_server import init_vLLM, stop_vLLM
-from geo_recog import GeoRecog
+from utils.vLLM_server import init_vLLM, stop_vLLM
+from utils.geo_recog import GeoRecog
 
 geo_recog = None
 

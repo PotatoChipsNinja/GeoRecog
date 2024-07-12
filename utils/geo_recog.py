@@ -2,10 +2,22 @@ import json
 import threading
 from openai import OpenAI
 
+class OOVProcessor:
+    def __init__(self, vocabs, emb_model_path):
+        self.vocabs = vocabs
+        self.emb_model_path = emb_model_path
+
+    def attach(self, text):
+        target = None
+        return target
+
 class GeoRecog:
     def __init__(self, api_pool):
         self.api_pool = api_pool
         self.api_locks = [threading.Lock() for _ in api_pool]
+
+        # self.oov_processor = OOVProcessor()
+        # self.name2code = dict()
 
     def get_api(self):
         while True:
@@ -26,7 +38,7 @@ class GeoRecog:
         api_lock.release()
         return ans
 
-    def query(self, content):
+    def llm_geo_recog(self, content):
         messages=[
             {"role": "system", "content": "请你从以下新闻内容中抽取出所有包含地理位置信息的命名实体（entities字段），并综合分析哪个实体最能反映新闻发生的属地（analysis字段），并给出新闻所处的省级行政区（province字段）和市级行政区（city字段）。直辖市的省级行政区和市级行政区相同。结果以JSON列表形式输出。"},
             {"role": "user", "content": "【#南昌市信访局通报一公职人员开车顶人#】19日，江西南昌市信访局发布情况通报，南昌市信访局关注到有媒体报道，反映该局一名公职人员吴某在上海南京路驾驶私家车时，将2名拦在其车辆前方的物业公司工作人员顶住前行，造成不良影响。据初步了解，此事发生在6月15日，现当事人吴某已向物业公司工作人员道歉并达成和解。针对吴某的不当行为，南昌市信访局会同有关部门正在深入调查。下一步，将依据调查结果严肃认真处理。（南昌信访）"},
@@ -40,12 +52,15 @@ class GeoRecog:
         try:
             res = self.get_api_response(messages)
             res = json.loads(res)
-            assert (
-                'province' in res and
-                'city' in res and
-                len(res['province']) > 0 and
-                len(res['city']) > 0
-            ), 'Missing province or city field in LLM response.'
-            return {'province': res['province'], 'city': res['city']}
-        except Exception as e:
-            raise e
+            return {
+                'province': res['province'] if 'province' in res else None,
+                'city': res['city'] if 'city' in res else None
+            }
+        except:
+            return {'province': None, 'city': None}
+
+    def query(self, content):
+        llm_res = self.llm_geo_recog(content)
+        # llm_res['province'] = self.oov_processor.attach(llm_res['province'])
+        # llm_res['city'] = self.oov_processor.attach(llm_res['city'])
+        return llm_res

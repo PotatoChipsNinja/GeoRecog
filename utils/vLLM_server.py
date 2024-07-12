@@ -7,7 +7,8 @@ vLLM_processes = []
 
 def init_vLLM():
     gpu_num = int(os.environ.get("GPU_NUM", 4))
-    model_path = os.environ.get("LLM_PATH", "./Qwen2-7B-Instruct")
+    model_path = "assets/pretrained/Qwen2-7B-Instruct"
+    # TODO: Add model_path check
     for i in range(gpu_num):
         port = 10800 + i
         cmd = f"CUDA_VISIBLE_DEVICES={i} python -m vllm.entrypoints.openai.api_server --served-model-name Qwen2-7B-Instruct --model {model_path} --port {port}"

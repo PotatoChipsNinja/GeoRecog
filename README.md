@@ -7,14 +7,14 @@
 - uvicorn >= 0.30.1
 
 ## 部署
-- 下载 [Qwen2-7B-Instruct](https://huggingface.co/Qwen/Qwen2-7B-Instruct) 到本地
+- 下载 [Qwen2-7B-Instruct](https://huggingface.co/Qwen/Qwen2-7B-Instruct)、[bge-large-zh-v1.5](https://huggingface.co/BAAI/bge-large-zh-v1.5) 模型
   ``` shell
-  huggingface-cli download --resume-download Qwen/Qwen2-7B-Instruct --local-dir ./Qwen2-7B-Instruct
+  huggingface-cli download --resume-download Qwen/Qwen2-7B-Instruct --local-dir ./assets/pretrained/Qwen2-7B-Instruct
+  huggingface-cli download --resume-download BAAI/bge-large-zh-v1.5 --local-dir ./assets/pretrained/bge-large-zh-v1.5
   ```
 - 启动 uvicorn 服务
   ``` shell
   export GPU_NUM=4
-  export LLM_PATH=./Qwen2-7B-Instruct
   uvicorn main:app --host 0.0.0.0 --port 8000
   ```
 
