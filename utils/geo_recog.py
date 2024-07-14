@@ -1,23 +1,63 @@
 import json
+import torch
 import threading
 from openai import OpenAI
+from transformers import AutoTokenizer, AutoModel
 
 class OOVProcessor:
     def __init__(self, vocabs, emb_model_path):
         self.vocabs = vocabs
-        self.emb_model_path = emb_model_path
+        self.tokenizer = AutoTokenizer.from_pretrained(emb_model_path)
+        self.model = AutoModel.from_pretrained(emb_model_path)
+        self.model.eval()
+        self.vocabs_emb = self.get_embeddings(vocabs)
+
+    def get_embeddings(self, texts):
+        encoded_input = self.tokenizer(texts, padding=True, truncation=True, return_tensors='pt')
+        with torch.no_grad():
+            model_output = self.model(**encoded_input)
+            embeddings = model_output[0][:, 0]
+        embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
+        return embeddings
 
     def attach(self, text):
-        target = None
-        return target
+        targets = []
+        for vocab in self.vocabs:
+            if vocab in text or text in vocab:
+                targets.append(vocab)
+        if len(targets) == 1:
+            return targets[0], 1.0
+        else:
+            emb = self.get_embeddings(text)
+            similarities = emb @ self.vocabs_emb.T
+            target = self.vocabs[similarities.argmax().item()]
+            target_sim = similarities.max().item()
+            return target, target_sim
 
 class GeoRecog:
     def __init__(self, api_pool):
         self.api_pool = api_pool
         self.api_locks = [threading.Lock() for _ in api_pool]
 
-        # self.oov_processor = OOVProcessor()
-        # self.name2code = dict()
+        geo_dict_path = 'assets/geo_dict/all.txt'
+        province_dict_path = 'assets/geo_dict/province.txt'
+        self.name2code = {}
+        with open(geo_dict_path, 'r') as f:
+            all_vocabs = []
+            for line in f.readlines():
+                code, name = line.strip().split('=')
+                self.name2code[name] = code
+                all_vocabs.append(name)
+        with open(province_dict_path, 'r') as f:
+            province_vocabs = []
+            for line in f.readlines():
+                code, name = line.strip().split('=')
+                self.name2code[name] = code
+                province_vocabs.append(name)
+
+        emb_model_path = 'assets/pretrained/bge-large-zh-v1.5'
+        self.province_oov_processor = OOVProcessor(province_vocabs, emb_model_path)
+        self.city_oov_processor = OOVProcessor(all_vocabs, emb_model_path)
 
     def get_api(self):
         while True:
@@ -53,14 +93,17 @@ class GeoRecog:
             res = self.get_api_response(messages)
             res = json.loads(res)
             return {
-                'province': res['province'] if 'province' in res else None,
-                'city': res['city'] if 'city' in res else None
+                'province': res['province'] if ('province' in res and len(res['province']) > 0) else None,
+                'city': res['city'] if ('city' in res and len(res['city']) > 0) else None
             }
         except:
             return {'province': None, 'city': None}
 
     def query(self, content):
         llm_res = self.llm_geo_recog(content)
-        # llm_res['province'] = self.oov_processor.attach(llm_res['province'])
-        # llm_res['city'] = self.oov_processor.attach(llm_res['city'])
+        if llm_res['province'] is not None:
+            llm_res['province'], _ = self.province_oov_processor.attach(llm_res['province'])
+        if llm_res['city'] is not None:
+            llm_res['city'], _ = self.city_oov_processor.attach(llm_res['city'])
+        llm_res['code'] = self.name2code.get(llm_res['city'], self.name2code.get(llm_res['province'], None))
         return llm_res
