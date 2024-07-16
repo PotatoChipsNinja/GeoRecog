@@ -102,8 +102,17 @@ class GeoRecog:
     def query(self, content):
         llm_res = self.llm_geo_recog(content)
         if llm_res['province'] is not None:
-            llm_res['province'], _ = self.province_oov_processor.attach(llm_res['province'])
+            target, target_sim = self.province_oov_processor.attach(llm_res['province'])
+            if target_sim > 0.8:
+                llm_res['province'] = target
+            else:
+                llm_res['province'] = None
+                llm_res['city'] = None
         if llm_res['city'] is not None:
-            llm_res['city'], _ = self.city_oov_processor.attach(llm_res['city'])
+            target, target_sim = self.city_oov_processor.attach(llm_res['city'])
+            if target_sim > 0.8:
+                llm_res['city'] = target
+            else:
+                llm_res['city'] = None
         llm_res['code'] = self.name2code.get(llm_res['city'], self.name2code.get(llm_res['province'], None))
         return llm_res
