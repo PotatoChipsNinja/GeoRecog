@@ -17,7 +17,25 @@
   uvicorn main:app --host 0.0.0.0 --port 8000
   ```
 
-## 调用
+## 接口说明
+### 接口描述
+接口URL：`http://127.0.0.1:8000/query`
+
+请求方式：`GET`
+
+### 请求参数
+| 参数名称 | 必选 | 类型 | 说明 |
+| :-: | :-: | :-: | :-: |
+| content | 是 | String | 待检测内容 |
+
+### 返回结果参数
+| 参数 | 类型 | 说明 |
+| :- | :-: | :-: |
+| province | String | 省级行政区 |
+| city | String | 地级市级行政区 |
+| code | String | 行政区代码 |
+
+### 调用示例
 ``` python
 import json
 import requests
