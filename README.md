@@ -6,6 +6,11 @@
 - FastAPI >= 0.111.0
 
 ## 部署
+- 拉取代码
+  ``` shell
+  git clone https://github.com/PotatoChipsNinja/GeoRecog.git
+  cd GeoRecog
+  ```
 - 下载 [Qwen2-7B-Instruct](https://huggingface.co/Qwen/Qwen2-7B-Instruct)、[bge-large-zh-v1.5](https://huggingface.co/BAAI/bge-large-zh-v1.5) 模型
   ``` shell
   huggingface-cli download --resume-download Qwen/Qwen2-7B-Instruct --local-dir ./assets/pretrained/Qwen2-7B-Instruct
