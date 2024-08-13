@@ -72,6 +72,7 @@ class GeoRecog:
             model="Qwen2-7B-Instruct",
             messages=messages,
             temperature=0,
+            max_tokens=1200,
             timeout=5
         )
         ans = response.choices[0].message.content
@@ -79,6 +80,7 @@ class GeoRecog:
         return ans
 
     def llm_geo_recog(self, content):
+        content = content[:300]  # 超过一定长度vLLM会分块处理，导致后面的请求处理不了
         messages=[
             {"role": "system", "content": "请你从以下新闻内容中抽取出所有包含地理位置信息的命名实体（entities字段），并综合分析哪个实体最能反映新闻发生的属地（analysis字段），并给出新闻所处的省级行政区（province字段）和市级行政区（city字段）。直辖市的省级行政区和市级行政区相同。结果以JSON列表形式输出。"},
             {"role": "user", "content": "【#南昌市信访局通报一公职人员开车顶人#】19日，江西南昌市信访局发布情况通报，南昌市信访局关注到有媒体报道，反映该局一名公职人员吴某在上海南京路驾驶私家车时，将2名拦在其车辆前方的物业公司工作人员顶住前行，造成不良影响。据初步了解，此事发生在6月15日，现当事人吴某已向物业公司工作人员道歉并达成和解。针对吴某的不当行为，南昌市信访局会同有关部门正在深入调查。下一步，将依据调查结果严肃认真处理。（南昌信访）"},
@@ -93,8 +95,8 @@ class GeoRecog:
             res = self.get_api_response(messages)
             res = json.loads(res)
             return {
-                'province': res['province'] if ('province' in res and len(res['province']) > 0) else None,
-                'city': res['city'] if ('city' in res and len(res['city']) > 0) else None
+                'province': res['province'] if ('province' in res and type(res['province']) is str and len(res['province']) > 0) else None,
+                'city': res['city'] if ('city' in res and type(res['city']) is str and len(res['city']) > 0) else None
             }
         except:
             return {'province': None, 'city': None}
