@@ -72,8 +72,7 @@ class GeoRecog:
             model="Qwen2-7B-Instruct",
             messages=messages,
             temperature=0,
-            max_tokens=1200,
-            timeout=5
+            max_tokens=800
         )
         ans = response.choices[0].message.content
         api_lock.release()
