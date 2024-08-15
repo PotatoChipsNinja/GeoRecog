@@ -36,9 +36,13 @@
 ### 返回结果参数
 | 参数 | 类型 | 说明 |
 | :- | :-: | :-: |
-| province | String | 省级行政区 |
-| city | String | 地级市级行政区 |
-| code | String | 行政区代码 |
+| province | String | 主属地省级行政区 |
+| city | String | 主属地地级市级行政区 |
+| code | String | 主属地行政区代码 |
+| candidate | Array | 候选属地列表 |
+| &rarr;province | String | 候选属地省级行政区 |
+| &rarr;city | String | 候选属地地级市级行政区 |
+| &rarr;code | String | 候选属地行政区代码 |
 
 ### 调用示例
 ``` python
@@ -46,11 +50,37 @@ import json
 import requests
 
 api_url = 'http://127.0.0.1:8000/query'
-data = { "content": "【#女子称养父去世后堂哥要求继承房产# 村支书回应】近日，河南周口一女子发视频称，堂哥“霸占”养父的房子土地。女子表示，养父2019年去世，因自己是女性，由堂哥在葬礼仪式上摔盆送养父下葬，于是堂哥要求继承养父的房子和土地。" }
+content = "在黔北深山，有位叫黄大发的老支书，今年82岁了。他用36年时间修渠，最终让全村人喝上了水。这位老支书很少出远门，两年前他第一次到贵州省城，他哪里也没去，只是到省委看国旗。1他第一次来北京，第一次看到天安门，不禁流下了泪水…#定格# "
+data = { "content": content }
 res = requests.get(api_url, params=data)
 res = json.loads(res.content)
 
-print(res)  # {'province': '河南', 'city': '周口市', 'code': '411600'}
+print(res)
+```
+返回结果如下：
+``` json
+{
+    "province": "北京",
+    "city": "北京市",
+    "code": "110000",
+    "candidate": [
+        {
+            "province": "贵州",
+            "city": "贵阳市",
+            "code": "520100"
+        },
+        {
+            "province": "北京",
+            "city": "北京市",
+            "code": "110000"
+        },
+        {
+            "province": "贵州",
+            "city": "遵义市",
+            "code": "520300"
+        }
+    ]
+}
 ```
 
 ## 性能测试
